@@ -1,0 +1,371 @@
+{% extends 'user/base.html' %}
+
+{% block title %}{{ student.first_name }} {{ student.last_name }} - Profile{% endblock %}
+
+{% block extra_head %}
+<style>
+    .profile-container {
+        max-width: 900px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+    }
+
+    /* Profile Header Banner */
+    .profile-banner {
+        background-color: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 32px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-banner::before {
+        content: '';
+        position: absolute;
+        top: -100px;
+        right: -100px;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .profile-lg-avatar {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1 0%, #a5b4fc 100%);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 2.25rem;
+        text-transform: uppercase;
+        box-shadow: 0 8px 20px 0 rgba(99, 102, 241, 0.3);
+        flex-shrink: 0;
+    }
+
+    .profile-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex-grow: 1;
+    }
+
+    .profile-name {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: -0.02em;
+    }
+
+    .profile-subtitle {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
+    .profile-subtitle code {
+        background-color: rgba(255, 255, 255, 0.05);
+        padding: 2px 8px;
+        border-radius: 6px;
+        color: #a5b4fc;
+        font-family: monospace;
+    }
+
+    .profile-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    /* Grid Layout */
+    .profile-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 32px;
+    }
+
+    @media (max-width: 768px) {
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .profile-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 28px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.15);
+    }
+
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 20px;
+        border-bottom: 1px solid var(--card-border);
+        padding-bottom: 12px;
+    }
+
+    /* Left Card: Performance */
+    .performance-widget {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 16px;
+    }
+
+    .marks-circle {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border: 4px solid var(--card-border);
+        position: relative;
+    }
+
+    .marks-value {
+        font-size: 2rem;
+        font-weight: 800;
+    }
+
+    .marks-label {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    /* Marks Badge Colors */
+    .border-excellent { border-color: var(--success); color: #34d399; }
+    .border-good { border-color: var(--info); color: #60a5fa; }
+    .border-pass { border-color: var(--warning); color: #fbbf24; }
+    .border-fail { border-color: var(--danger); color: #f87171; }
+
+    .grade-badge {
+        display: inline-block;
+        padding: 6px 16px;
+        border-radius: 9999px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        margin-top: 8px;
+    }
+
+    .badge-success { background-color: var(--success-bg); color: #34d399; }
+    .badge-primary { background-color: var(--info-bg); color: #60a5fa; }
+    .badge-warning { background-color: var(--warning-bg); color: #fbbf24; }
+    .badge-danger { background-color: var(--danger-bg); color: #f87171; }
+
+    .performance-bar-container {
+        width: 100%;
+        height: 8px;
+        background-color: rgba(255, 255, 255, 0.05);
+        border-radius: 999px;
+        overflow: hidden;
+        margin-top: 12px;
+    }
+
+    .performance-bar {
+        height: 100%;
+        border-radius: 999px;
+    }
+
+    .bar-excellent { background-color: var(--success); }
+    .bar-good { background-color: var(--info); }
+    .bar-pass { background-color: var(--warning); }
+    .bar-fail { background-color: var(--danger); }
+
+    /* Right Card: Details List */
+    .details-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .detail-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .detail-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background-color: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--card-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+        flex-shrink: 0;
+    }
+
+    .detail-icon svg {
+        width: 20px;
+        height: 20px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+    }
+
+    .detail-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .detail-label {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    .detail-value {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        line-height: 1.4;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<header>
+    <div class="header-title">
+        <h1>Student Profile</h1>
+        <p>Review comprehensive academic and registration metadata.</p>
+    </div>
+    <div class="header-actions">
+        <a href="{% url 'student_list' %}" class="btn btn-secondary">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Back to Dashboard
+        </a>
+    </div>
+</header>
+
+<div class="profile-container">
+    <!-- Profile Banner -->
+    <div class="profile-banner">
+        <div class="profile-lg-avatar">
+            {{ student.first_name|slice:":1" }}{{ student.last_name|slice:":1" }}
+        </div>
+        <div class="profile-meta">
+            <h2 class="profile-name">{{ student.first_name }} {{ student.last_name }}</h2>
+            <div class="profile-subtitle">
+                <span>Roll ID: <code>{{ student.roll_number }}</code></span>
+                <span>&bull;</span>
+                <span>Class: <strong>{{ student.class_name }}</strong></span>
+            </div>
+        </div>
+        <div class="profile-actions">
+            <a href="{% url 'student_update' student.pk %}" class="btn btn-secondary">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                Edit
+            </a>
+            <a href="{% url 'student_delete' student.pk %}" class="btn btn-danger">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                Delete
+            </a>
+        </div>
+    </div>
+
+    <!-- Grid info panels -->
+    <div class="profile-grid">
+        <!-- Left: Performance -->
+        <div class="profile-card">
+            <h3 class="card-title">Academic Score</h3>
+            <div class="performance-widget">
+                <div class="marks-circle {% if grade == 'Excellent' %}border-excellent{% elif grade == 'Good' %}border-good{% elif grade == 'Pass' %}border-pass{% else %}border-fail{% endif %}">
+                    <span class="marks-value">{{ student.marks|floatformat:0 }}</span>
+                    <span class="marks-label">Marks</span>
+                </div>
+                <span class="grade-badge {{ grade_class }}">{{ grade }} Standing</span>
+                
+                <div class="performance-bar-container">
+                    <div class="performance-bar {% if grade == 'Excellent' %}bar-excellent{% elif grade == 'Good' %}bar-good{% elif grade == 'Pass' %}bar-pass{% else %}bar-fail{% endif %}" style="width: {{ student.marks }}%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Information Details -->
+        <div class="profile-card">
+            <h3 class="card-title">Personal Information</h3>
+            <div class="details-list">
+                <!-- Email -->
+                <div class="detail-item">
+                    <div class="detail-icon">
+                        <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    </div>
+                    <div class="detail-content">
+                        <span class="detail-label">Email Address</span>
+                        <span class="detail-value">{{ student.email }}</span>
+                    </div>
+                </div>
+                <!-- Mobile No -->
+                <div class="detail-item">
+                    <div class="detail-icon">
+                        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    </div>
+                    <div class="detail-content">
+                        <span class="detail-label">Mobile Number</span>
+                        <span class="detail-value">{{ student.mobile_no }}</span>
+                    </div>
+                </div>
+                <!-- DOB -->
+                <div class="detail-item">
+                    <div class="detail-icon">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    </div>
+                    <div class="detail-content">
+                        <span class="detail-label">Date of Birth</span>
+                        <span class="detail-value">{{ student.date_of_birth|date:"F d, Y" }}</span>
+                    </div>
+                </div>
+                <!-- Gender -->
+                <div class="detail-item">
+                    <div class="detail-icon">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8l4 4-4 4M8 12h8"/></svg>
+                    </div>
+                    <div class="detail-content">
+                        <span class="detail-label">Gender Identity</span>
+                        <span class="detail-value">{{ student.gender }}</span>
+                    </div>
+                </div>
+                <!-- Address -->
+                {% if student.address %}
+                <div class="detail-item">
+                    <div class="detail-icon">
+                        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    </div>
+                    <div class="detail-content">
+                        <span class="detail-label">Residential Address</span>
+                        <span class="detail-value">{{ student.address }}</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

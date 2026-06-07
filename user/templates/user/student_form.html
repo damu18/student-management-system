@@ -1,0 +1,196 @@
+{% extends 'user/base.html' %}
+
+{% block title %}{{ action }} Student - EduManage{% endblock %}
+{% block nav_add %}{% if action == 'Add New' %}active{% endif %}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .form-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 32px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.2);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .form-header {
+        margin-bottom: 28px;
+        border-bottom: 1px solid var(--card-border);
+        padding-bottom: 20px;
+    }
+
+    .form-header h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+    }
+
+    .form-header p {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px 24px;
+        margin-bottom: 32px;
+    }
+
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .form-group.full-width {
+        grid-column: span 2;
+    }
+
+    @media (max-width: 768px) {
+        .form-group.full-width {
+            grid-column: span 1;
+        }
+    }
+
+    .form-group label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+
+    .form-group input, 
+    .form-group select, 
+    .form-group textarea {
+        background-color: rgba(17, 24, 39, 0.8);
+        border: 1px solid var(--card-border);
+        border-radius: 10px;
+        padding: 12px 16px;
+        color: var(--text-primary);
+        font-family: var(--font-family);
+        font-size: 0.92rem;
+        outline: none;
+        width: 100%;
+        transition: all var(--transition-speed);
+    }
+
+    .form-group input:focus, 
+    .form-group select:focus, 
+    .form-group textarea:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    .form-group select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 16px center;
+        background-size: 16px;
+        padding-right: 40px;
+    }
+
+    /* Error and Help states */
+    .error-msg {
+        color: var(--danger);
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-top: 4px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .error-msg::before {
+        content: '!';
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background-color: var(--danger);
+        color: #fff;
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+
+    .form-group.has-error input,
+    .form-group.has-error select,
+    .form-group.has-error textarea {
+        border-color: var(--danger);
+    }
+
+    .form-group.has-error input:focus,
+    .form-group.has-error select:focus,
+    .form-group.has-error textarea:focus {
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 16px;
+        border-top: 1px solid var(--card-border);
+        padding-top: 24px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<header>
+    <div class="header-title">
+        <h1>{% if action == 'Add New' %}Register Student{% else %}Modify Record{% endif %}</h1>
+        <p>{% if action == 'Add New' %}Create a new student entry in the database.{% else %}Update fields for student {{ student.first_name }} {{ student.last_name }}.{% endif %}</p>
+    </div>
+    <div class="header-actions">
+        <a href="{% if action == 'Edit' %}{% url 'student_detail' student.pk %}{% else %}{% url 'student_list' %}{% endif %}" class="btn btn-secondary">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Back
+        </a>
+    </div>
+</header>
+
+<div class="form-card">
+    <div class="form-header">
+        <h2>Student Details</h2>
+        <p>Ensure all information matches legal registration records.</p>
+    </div>
+    
+    <form method="POST" autocomplete="off" novalidate>
+        {% csrf_token %}
+        
+        <div class="form-grid">
+            {% for field in form %}
+            <div class="form-group {% if field.name == 'address' %}full-width{% endif %} {% if field.errors %}has-error{% endif %}">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                <div class="error-msg">
+                    {% for error in field.errors %}{{ error }}{% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="form-actions">
+            <a href="{% if action == 'Edit' %}{% url 'student_detail' student.pk %}{% else %}{% url 'student_list' %}{% endif %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                {% if action == 'Edit' %}Save Changes{% else %}Register Student{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

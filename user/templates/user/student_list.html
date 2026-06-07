@@ -1,0 +1,655 @@
+{% extends 'user/base.html' %}
+
+{% block title %}Dashboard - EduManage{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 24px;
+        margin-bottom: 40px;
+    }
+    @media (min-width: 1200px) {
+        .stats-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
+    .stat-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 24px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.15);
+        transition: transform var(--transition-speed), border-color var(--transition-speed);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .stat-icon-primary { background-color: var(--primary-glow); color: var(--primary); }
+    .stat-icon-success { background-color: var(--success-bg); color: var(--success); }
+    .stat-icon-warning { background-color: var(--warning-bg); color: var(--warning); }
+    .stat-icon-info { background-color: var(--info-bg); color: var(--info); }
+
+    .stat-icon svg {
+        width: 24px;
+        height: 24px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+    }
+
+    .stat-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .stat-subtext {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Filter Card */
+    .filter-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 20px 24px;
+        margin-bottom: 32px;
+        backdrop-filter: blur(10px);
+    }
+
+    .filter-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: flex-end;
+    }
+
+    .form-group-flex {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex-grow: 1;
+        min-width: 180px;
+    }
+
+    .form-group-flex label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .form-control, .form-select {
+        background-color: rgba(17, 24, 39, 0.8);
+        border: 1px solid var(--card-border);
+        border-radius: 10px;
+        padding: 11px 16px;
+        color: var(--text-primary);
+        font-family: var(--font-family);
+        font-size: 0.9rem;
+        outline: none;
+        width: 100%;
+        transition: all var(--transition-speed);
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    .form-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 16px center;
+        background-size: 16px;
+        padding-right: 40px;
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    /* Table Container */
+    .table-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    .table-container {
+        overflow-x: auto;
+        width: 100%;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    th {
+        background-color: rgba(17, 24, 39, 0.4);
+        padding: 16px 24px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--card-border);
+    }
+
+    td {
+        padding: 18px 24px;
+        border-bottom: 1px solid var(--card-border);
+        font-size: 0.92rem;
+        color: var(--text-primary);
+        vertical-align: middle;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    tr:hover td {
+        background-color: rgba(255, 255, 255, 0.01);
+    }
+
+    /* Student Info Cell */
+    .student-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .student-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1 0%, #a5b4fc 100%);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        flex-shrink: 0;
+    }
+
+    .student-details {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .student-name {
+        font-weight: 600;
+        color: var(--text-primary);
+        text-decoration: none;
+        transition: color var(--transition-speed);
+    }
+
+    .student-name:hover {
+        color: var(--primary);
+    }
+
+    .student-email {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    /* Badges */
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 9999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+
+    .badge-excellent {
+        background-color: rgba(16, 185, 129, 0.12);
+        color: #10b981;
+    }
+
+    .badge-good {
+        background-color: rgba(59, 130, 246, 0.12);
+        color: #3b82f6;
+    }
+
+    .badge-pass {
+        background-color: rgba(245, 158, 11, 0.12);
+        color: #f59e0b;
+    }
+
+    .badge-fail {
+        background-color: rgba(239, 68, 68, 0.12);
+        color: #ef4444;
+    }
+
+    /* Action Links */
+    .action-links {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .action-btn {
+        color: var(--text-secondary);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: 1px solid transparent;
+        transition: all var(--transition-speed);
+        text-decoration: none;
+    }
+
+    .action-btn:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+    }
+
+    .action-btn-view:hover {
+        color: var(--info);
+        border-color: rgba(59, 130, 246, 0.2);
+        background-color: var(--info-bg);
+    }
+
+    .action-btn-edit:hover {
+        color: var(--warning);
+        border-color: rgba(245, 158, 11, 0.2);
+        background-color: var(--warning-bg);
+    }
+
+    .action-btn-delete:hover {
+        color: var(--danger);
+        border-color: rgba(239, 68, 68, 0.2);
+        background-color: var(--danger-bg);
+    }
+
+    .action-btn svg {
+        width: 16px;
+        height: 16px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+    }
+
+    /* Pagination */
+    .pagination-container {
+        padding: 20px 24px;
+        border-top: 1px solid var(--card-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .pagination-text {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .pagination-links {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .pagination-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 36px;
+        padding: 0 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-decoration: none;
+        color: var(--text-secondary);
+        background-color: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--card-border);
+        transition: all var(--transition-speed);
+    }
+
+    .pagination-link:hover {
+        color: var(--text-primary);
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .pagination-link.active {
+        color: #fff;
+        background-color: var(--primary);
+        border-color: var(--primary);
+    }
+
+    /* Empty State */
+    .empty-state {
+        padding: 60px 24px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+    }
+
+    .empty-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--card-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+    }
+
+    .empty-icon svg {
+        width: 32px;
+        height: 32px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.5;
+    }
+
+    .empty-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .empty-desc {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        max-width: 400px;
+        margin: 0 auto 12px auto;
+        line-height: 1.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<header>
+    <div class="header-title">
+        <h1>Students Dashboard</h1>
+        <p>Manage, search, and analyze your institution's student records.</p>
+    </div>
+    <div class="header-actions">
+        <a href="{% url 'student_create' %}" class="btn btn-primary">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M12 5v14M5 12h14"/></svg>
+            Add Student
+        </a>
+    </div>
+</header>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <!-- Stat Card 1 -->
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-primary">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">Total Students</span>
+            <span class="stat-value">{{ total_students }}</span>
+            <span class="stat-subtext">Registered in portal</span>
+        </div>
+    </div>
+    <!-- Stat Card 2 -->
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-info">
+            <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">Average Marks</span>
+            <span class="stat-value">{{ avg_marks }}</span>
+            <span class="stat-subtext">Out of 100 max</span>
+        </div>
+    </div>
+    <!-- Stat Card 3 -->
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-success">
+            <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">Passing Rate</span>
+            <span class="stat-value">{{ pass_rate }}%</span>
+            <span class="stat-subtext">Marks &ge; 40</span>
+        </div>
+    </div>
+    <!-- Stat Card 4 -->
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-warning">
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </div>
+        <div class="stat-info" style="flex-grow: 1; min-width: 0;">
+            <span class="stat-label">Top Performer</span>
+            {% if top_student %}
+            <span class="stat-value" title="{{ top_student.first_name }} {{ top_student.last_name }}">{{ top_student.first_name }} {{ top_student.last_name|slice:":1" }}.</span>
+            <span class="stat-subtext">{{ top_student.marks }} Marks ({{ top_student.class_name }})</span>
+            {% else %}
+            <span class="stat-value">&mdash;</span>
+            <span class="stat-subtext">No records</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Search & Filters -->
+<div class="filter-card">
+    <form method="GET" action="{% url 'student_list' %}" class="filter-form">
+        <!-- Search -->
+        <div class="form-group-flex" style="flex-grow: 2;">
+            <label for="q">Search</label>
+            <input type="text" id="q" name="q" value="{{ q }}" placeholder="Search by name, roll no, email..." class="form-control">
+        </div>
+        <!-- Class Filter -->
+        <div class="form-group-flex">
+            <label for="class_name">Class</label>
+            <select id="class_name" name="class_name" class="form-select">
+                <option value="">All Classes</option>
+                {% for c in class_names %}
+                <option value="{{ c }}" {% if class_filter == c %}selected{% endif %}>{{ c }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <!-- Gender Filter -->
+        <div class="form-group-flex" style="min-width: 120px;">
+            <label for="gender">Gender</label>
+            <select id="gender" name="gender" class="form-select">
+                <option value="">All</option>
+                <option value="Male" {% if gender_filter == 'Male' %}selected{% endif %}>Male</option>
+                <option value="Female" {% if gender_filter == 'Female' %}selected{% endif %}>Female</option>
+                <option value="Other" {% if gender_filter == 'Other' %}selected{% endif %}>Other</option>
+            </select>
+        </div>
+        <!-- Performance Filter -->
+        <div class="form-group-flex" style="min-width: 150px;">
+            <label for="performance">Performance</label>
+            <select id="performance" name="performance" class="form-select">
+                <option value="">All Marks</option>
+                <option value="excellent" {% if performance_filter == 'excellent' %}selected{% endif %}>Excellent (&ge;80)</option>
+                <option value="good" {% if performance_filter == 'good' %}selected{% endif %}>Good (60-79)</option>
+                <option value="pass" {% if performance_filter == 'pass' %}selected{% endif %}>Pass (40-59)</option>
+                <option value="fail" {% if performance_filter == 'fail' %}selected{% endif %}>Fail (&lt;40)</option>
+            </select>
+        </div>
+        <!-- Actions -->
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary" style="padding: 11px 22px;">Apply</button>
+            {% if q or class_filter or gender_filter or performance_filter %}
+            <a href="{% url 'student_list' %}" class="btn btn-secondary" style="padding: 11px 20px;">Clear</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Table Card -->
+<div class="table-card">
+    {% if students %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Roll Number</th>
+                    <th>Class</th>
+                    <th>Gender</th>
+                    <th>Marks</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td>
+                        <div class="student-info">
+                            <div class="student-avatar">
+                                {{ student.first_name|slice:":1" }}{{ student.last_name|slice:":1" }}
+                            </div>
+                            <div class="student-details">
+                                <a href="{% url 'student_detail' student.pk %}" class="student-name">{{ student.first_name }} {{ student.last_name }}</a>
+                                <span class="student-email">{{ student.email }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td><code style="color: #a5b4fc; font-family: monospace; font-size: 0.9rem;">{{ student.roll_number }}</code></td>
+                    <td>{{ student.class_name }}</td>
+                    <td>{{ student.gender }}</td>
+                    <td>
+                        {% if student.marks >= 80 %}
+                        <span class="badge badge-excellent">{{ student.marks }} (Excellent)</span>
+                        {% elif student.marks >= 60 %}
+                        <span class="badge badge-good">{{ student.marks }} (Good)</span>
+                        {% elif student.marks >= 40 %}
+                        <span class="badge badge-pass">{{ student.marks }} (Pass)</span>
+                        {% else %}
+                        <span class="badge badge-fail">{{ student.marks }} (Fail)</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-links" style="justify-content: flex-end;">
+                            <a href="{% url 'student_detail' student.pk %}" class="action-btn action-btn-view" title="View details">
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/></svg>
+                            </a>
+                            <a href="{% url 'student_update' student.pk %}" class="action-btn action-btn-edit" title="Edit student">
+                                <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                            </a>
+                            <a href="{% url 'student_delete' student.pk %}" class="action-btn action-btn-delete" title="Delete record">
+                                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if students.has_other_pages %}
+    <div class="pagination-container">
+        <span class="pagination-text">Showing page {{ students.number }} of {{ students.paginator.num_pages }}</span>
+        <div class="pagination-links">
+            {% if students.has_previous %}
+            <a href="?page={{ students.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if class_filter %}&class_name={{ class_filter }}{% endif %}{% if gender_filter %}&gender={{ gender_filter }}{% endif %}{% if performance_filter %}&performance={{ performance_filter }}{% endif %}" class="pagination-link">
+                Previous
+            </a>
+            {% endif %}
+
+            {% for num in students.paginator.page_range %}
+                {% if students.number == num %}
+                <span class="pagination-link active">{{ num }}</span>
+                {% elif num > students.number|add:'-3' and num < students.number|add:'3' %}
+                <a href="?page={{ num }}{% if q %}&q={{ q }}{% endif %}{% if class_filter %}&class_name={{ class_filter }}{% endif %}{% if gender_filter %}&gender={{ gender_filter }}{% endif %}{% if performance_filter %}&performance={{ performance_filter }}{% endif %}" class="pagination-link">
+                    {{ num }}
+                </a>
+                {% endif %}
+            {% endfor %}
+
+            {% if students.has_next %}
+            <a href="?page={{ students.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if class_filter %}&class_name={{ class_filter }}{% endif %}{% if gender_filter %}&gender={{ gender_filter }}{% endif %}{% if performance_filter %}&performance={{ performance_filter }}{% endif %}" class="pagination-link">
+                Next
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <h3 class="empty-title">No Students Found</h3>
+        <p class="empty-desc">
+            {% if q or class_filter or gender_filter or performance_filter %}
+            No student records matched your search filters. Try adjusting your search query or filters.
+            {% else %}
+            No students are currently registered in the management system. Start by creating a student record.
+            {% endif %}
+        </p>
+        <div style="display: flex; gap: 12px;">
+            {% if q or class_filter or gender_filter or performance_filter %}
+            <a href="{% url 'student_list' %}" class="btn btn-secondary">Clear Filters</a>
+            {% endif %}
+            <a href="{% url 'student_create' %}" class="btn btn-primary">Add First Student</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

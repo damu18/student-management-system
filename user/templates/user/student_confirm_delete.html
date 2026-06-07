@@ -1,0 +1,146 @@
+{% extends 'user/base.html' %}
+
+{% block title %}Confirm Delete - EduManage{% endblock %}
+
+{% block extra_head %}
+<style>
+    .delete-card {
+        background-color: var(--card-bg);
+        border: 1px solid rgba(239, 68, 68, 0.15);
+        border-radius: 16px;
+        padding: 36px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.25);
+        max-width: 500px;
+        margin: 40px auto;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .warning-icon-wrapper {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background-color: var(--danger-bg);
+        color: var(--danger);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 8px;
+        animation: pulse 2s infinite;
+    }
+
+    .warning-icon-wrapper svg {
+        width: 32px;
+        height: 32px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+    }
+
+    .delete-title {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .delete-desc {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        line-height: 1.5;
+        margin-bottom: 12px;
+    }
+
+    .student-badge {
+        background-color: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--card-border);
+        border-radius: 10px;
+        padding: 12px 18px;
+        font-size: 0.92rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .student-badge code {
+        background-color: var(--danger-bg);
+        color: #f87171;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.82rem;
+    }
+
+    .actions-row {
+        display: flex;
+        gap: 16px;
+        width: 100%;
+        margin-top: 12px;
+    }
+
+    .actions-row form {
+        flex-grow: 1;
+    }
+
+    .actions-row .btn {
+        width: 100%;
+    }
+
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<header>
+    <div class="header-title">
+        <h1>Remove Record</h1>
+        <p>Confirm student profile deletion from registry database.</p>
+    </div>
+    <div class="header-actions">
+        <a href="{% url 'student_detail' student.pk %}" class="btn btn-secondary">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Cancel
+        </a>
+    </div>
+</header>
+
+<div class="delete-card">
+    <div class="warning-icon-wrapper">
+        <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    
+    <h2 class="delete-title">Are you absolutely sure?</h2>
+    
+    <p class="delete-desc">
+        This action cannot be undone. All personal data, contact files, and marks records for this student will be permanently deleted from the database.
+    </p>
+    
+    <div class="student-badge">
+        <span>{{ student.first_name }} {{ student.last_name }}</span>
+        <code>{{ student.roll_number }}</code>
+    </div>
+    
+    <div class="actions-row">
+        <a href="{% url 'student_detail' student.pk %}" class="btn btn-secondary">Cancel</a>
+        <form method="POST" action="{% url 'student_delete' student.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Confirm Delete</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
